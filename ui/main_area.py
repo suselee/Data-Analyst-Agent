@@ -96,9 +96,21 @@ def _render_chat():
     st.subheader("对话")
 
     # Render message history
-    for msg in st.session_state.get("messages", []):
+    messages = st.session_state.get("messages", [])
+    for msg in messages:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
+
+    if messages:
+        import json
+        chat_history = json.dumps(messages, ensure_ascii=False, indent=2)
+        st.download_button(
+            label="下载分析结果",
+            data=chat_history,
+            file_name="分析结果.json",
+            mime="application/json",
+            key="dl_analysis_results",
+        )
 
     # Chat input
     if prompt := st.chat_input("请输入你的分析需求..."):
@@ -130,7 +142,7 @@ def _render_chat():
                         event_type = getattr(event, "event", "")
 
                         # Content streaming events
-                        if event_type in ("RunContent", "RunIntermediateContent"):
+                        if event_type in ("RunContent", "RunIntermediateContent", "TeamRunContentEvent", "StepOutputEvent"):
                             content = getattr(event, "content", None)
                             if content:
                                 full_response += str(content)
