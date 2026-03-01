@@ -1,3 +1,6 @@
+# Generated output directories
+temp_charts/
+
 # Python cache
 __pycache__/
 *.py[cod]
