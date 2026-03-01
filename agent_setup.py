@@ -12,6 +12,9 @@ from agno.models.deepseek import DeepSeek
 from agno.models.openai.like import OpenAILike
 from agno.tools.pandas import PandasTools
 from agno.tools.python import PythonTools
+from agno.tools.reasoning import ReasoningTools
+from agno.team import Team
+from agno.workflow import Workflow
 
 from config import CHART_DIR, CHART_DIR_ABS, PROVIDERS
 
@@ -125,14 +128,56 @@ def create_agent(
         "- 最多重试 3 次不同的方案，如果仍然失败，向用户说明原因并给出建议",
     ]
 
-    agent = Agent(
-        model=model,
-        tools=[pandas_tools, python_tools],
-        instructions=instructions,
-        markdown=True,
-        add_history_to_context=True,
-        num_history_runs=5,
-        retries=3,
-    )
+    if len(dataframes) > 1:
+        data_agent = Agent(
+            name="数据分析专员",
+            role="负责使用 Pandas 处理、分析和统计数据",
+            model=model,
+            tools=[pandas_tools],
+            instructions=["请使用 PandasTools 对数据进行深入分析，提取有价值的结论。不要自己尝试画图。"],
+            markdown=True,
+            add_history_to_context=True,
+            num_history_runs=5,
+            enable_agentic_memory=True,
+        )
+        vis_agent = Agent(
+            name="数据可视化专员",
+            role="负责使用 Python 代码生成 Plotly 可视化图表",
+            model=model,
+            tools=[python_tools],
+            instructions=["请使用 PythonTools 和 Plotly 生成美观的可视化图表，严格遵守图表保存和导出的规范。"],
+            markdown=True,
+            add_history_to_context=True,
+            num_history_runs=5,
+            enable_agentic_memory=True,
+        )
 
-    return agent
+        team_instructions = instructions.copy()
+        team_instructions.append("- 这是一个多数据表分析任务，你需要协调数据分析专员和数据可视化专员共同完成任务。")
+
+        agent = Team(
+            name="数据分析团队",
+            members=[data_agent, vis_agent],
+            model=model,
+            tools=[ReasoningTools(add_instructions=True)],
+            instructions=team_instructions,
+            markdown=True,
+            add_history_to_context=True,
+            num_history_runs=5,
+            retries=3,
+            enable_agentic_memory=True,
+        )
+        return agent
+    else:
+        single_agent = Agent(
+            model=model,
+            tools=[pandas_tools, python_tools, ReasoningTools(add_instructions=True)],
+            instructions=instructions,
+            markdown=True,
+            add_history_to_context=True,
+            num_history_runs=5,
+            retries=3,
+            enable_agentic_memory=True,
+        )
+        workflow = Workflow(steps=[single_agent])
+        return workflow
