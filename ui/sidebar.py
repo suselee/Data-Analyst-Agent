@@ -1,5 +1,4 @@
 import os
-import glob
 import pandas as pd
 import streamlit as st
 
@@ -13,15 +12,22 @@ def _render_sidebar_downloads():
     if not os.path.exists(CHART_DIR_ABS):
         return
 
-    # Scan data files
+    # Scan data files (recursive)
     data_files = []
-    for ext in ("*.xlsx", "*.xls", "*.csv"):
-        data_files.extend(glob.glob(os.path.join(CHART_DIR_ABS, ext)))
+    valid_exts = {".xlsx", ".xls", ".csv"}
+    for root, _dirs, filenames in os.walk(CHART_DIR_ABS):
+        for fname in filenames:
+            if os.path.splitext(fname)[1].lower() in valid_exts:
+                data_files.append(os.path.join(root, fname))
     data_files.sort(key=os.path.getmtime)
 
-    # Check for report
-    report_path = os.path.join(CHART_DIR_ABS, "数据分析报告.html")
-    has_report = os.path.exists(report_path)
+    # Check for report (recursive)
+    report_path = None
+    for root, _dirs, filenames in os.walk(CHART_DIR_ABS):
+        if "数据分析报告.html" in filenames:
+            report_path = os.path.join(root, "数据分析报告.html")
+            break
+    has_report = report_path is not None
 
     if not data_files and not has_report:
         return

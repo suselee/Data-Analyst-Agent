@@ -1,5 +1,4 @@
 import os
-import glob
 import streamlit as st
 import streamlit.components.v1 as components
 
@@ -9,9 +8,12 @@ from config import CHART_DIR_ABS
 def _scan_chart_files() -> list:
     if not os.path.exists(CHART_DIR_ABS):
         return []
+    valid_exts = {".html", ".png", ".jpg", ".jpeg"}
     files = []
-    for ext in ("*.html", "*.png", "*.jpg", "*.jpeg"):
-        files.extend(glob.glob(os.path.join(CHART_DIR_ABS, ext)))
+    for root, _dirs, filenames in os.walk(CHART_DIR_ABS):
+        for fname in filenames:
+            if os.path.splitext(fname)[1].lower() in valid_exts:
+                files.append(os.path.join(root, fname))
     files.sort(key=os.path.getmtime)
     return files
 
@@ -19,9 +21,12 @@ def _scan_chart_files() -> list:
 def _scan_data_files() -> list:
     if not os.path.exists(CHART_DIR_ABS):
         return []
+    valid_exts = {".xlsx", ".xls", ".csv"}
     files = []
-    for ext in ("*.xlsx", "*.xls", "*.csv"):
-        files.extend(glob.glob(os.path.join(CHART_DIR_ABS, ext)))
+    for root, _dirs, filenames in os.walk(CHART_DIR_ABS):
+        for fname in filenames:
+            if os.path.splitext(fname)[1].lower() in valid_exts:
+                files.append(os.path.join(root, fname))
     files.sort(key=os.path.getmtime)
     return files
 
@@ -290,8 +295,13 @@ def _handle_report_generation():
             finally:
                 os.chdir(original_cwd)
 
-            report_path = os.path.join(CHART_DIR_ABS, "数据分析报告.html")
-            if not os.path.exists(report_path):
+            # Search for report file recursively
+            report_path = None
+            for root, _dirs, filenames in os.walk(CHART_DIR_ABS):
+                if "数据分析报告.html" in filenames:
+                    report_path = os.path.join(root, "数据分析报告.html")
+                    break
+            if report_path is None:
                 st.warning("报告生成未成功：未找到报告文件，请重试。")
             else:
                 st.session_state["messages"].append(
