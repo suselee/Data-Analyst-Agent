@@ -340,3 +340,6 @@ def render_main_area():
     _render_generated_files()
     _render_process_log()
     _render_chat()
+
+    # Add padding to the bottom so the chat input doesn't overlap the last message
+    st.markdown("<div style='height: 100px'></div>", unsafe_allow_html=True)
