@@ -9,7 +9,9 @@ from config import CHART_DIR_ABS
 def _scan_chart_files() -> list:
     if not os.path.exists(CHART_DIR_ABS):
         return []
-    files = glob.glob(os.path.join(CHART_DIR_ABS, "*.html"))
+    files = []
+    for ext in ("*.html", "*.png", "*.jpg", "*.jpeg"):
+        files.extend(glob.glob(os.path.join(CHART_DIR_ABS, ext)))
     files.sort(key=os.path.getmtime)
     return files
 
@@ -66,21 +68,36 @@ def _render_charts():
 
     st.subheader("图表与报告展示")
     for chart_path in reversed(chart_files):
-        chart_name = os.path.splitext(os.path.basename(chart_path))[0]
-        with open(chart_path, "r", encoding="utf-8") as f:
-            html_content = f.read()
+        chart_name, ext = os.path.splitext(os.path.basename(chart_path))
+        ext = ext.lower()
+
+        if ext == ".html":
+            with open(chart_path, "r", encoding="utf-8") as f:
+                content = f.read()
+            mime = "text/html"
+            btn_label = f"下载 {chart_name}.html"
+            file_name = f"{chart_name}.html"
+        else:
+            with open(chart_path, "rb") as f:
+                content = f.read()
+            mime = "image/png" if ext == ".png" else "image/jpeg"
+            btn_label = f"下载 {chart_name}{ext}"
+            file_name = f"{chart_name}{ext}"
 
         # Move download button outside the expander for better visibility
         st.download_button(
-            label=f"下载 {chart_name}.html",
-            data=html_content,
-            file_name=f"{chart_name}.html",
-            mime="text/html",
-            key=f"dl_chart_top_{chart_name}",
+            label=btn_label,
+            data=content,
+            file_name=file_name,
+            mime=mime,
+            key=f"dl_chart_top_{file_name}",
             type="primary",
         )
         with st.expander(f"查看: {chart_name}", expanded=True):
-            components.html(html_content, height=500, scrolling=True)
+            if ext == ".html":
+                components.html(content, height=500, scrolling=True)
+            else:
+                st.image(content)
 
 
 def _render_process_log():
@@ -319,7 +336,7 @@ def _render_generated_files():
 def render_main_area():
     _render_data_overview()
     _handle_report_generation()
-    _render_process_log()
-    _render_chat()
     _render_charts()
     _render_generated_files()
+    _render_process_log()
+    _render_chat()
