@@ -34,20 +34,29 @@ def _render_data_overview():
     for sheet_name, df in dataframes.items():
         with st.expander(f"Sheet: {sheet_name}", expanded=len(dataframes) == 1):
             st.write(f"**行数:** {len(df)}　**列数:** {len(df.columns)}")
-            st.dataframe(df.head(), use_container_width=True)
+
+            # Convert problematic columns to string to avoid Arrow serialization errors
+            display_df = df.head().copy()
+            for col in display_df.columns:
+                if display_df[col].dtype == 'object' or str(display_df[col].dtype).startswith('period') or str(display_df[col].dtype).startswith('datetime'):
+                    display_df[col] = display_df[col].astype(str)
+
+            st.dataframe(display_df)
+
             col1, col2 = st.columns(2)
             with col1:
                 st.write("**字段类型**")
+                dtypes_df = df.dtypes.reset_index().rename(
+                    columns={"index": "列名", 0: "类型"}
+                )
+                dtypes_df['类型'] = dtypes_df['类型'].astype(str)
                 st.dataframe(
-                    df.dtypes.reset_index().rename(
-                        columns={"index": "列名", 0: "类型"}
-                    ),
-                    use_container_width=True,
+                    dtypes_df,
                     hide_index=True,
                 )
             with col2:
                 st.write("**统计摘要**")
-                st.dataframe(df.describe(), use_container_width=True)
+                st.dataframe(df.describe())
 
 
 def _render_charts():
@@ -58,17 +67,20 @@ def _render_charts():
     st.subheader("图表与报告展示")
     for chart_path in reversed(chart_files):
         chart_name = os.path.splitext(os.path.basename(chart_path))[0]
-        with st.expander(chart_name, expanded=True):
-            with open(chart_path, "r", encoding="utf-8") as f:
-                html_content = f.read()
+        with open(chart_path, "r", encoding="utf-8") as f:
+            html_content = f.read()
+
+        # Move download button outside the expander for better visibility
+        st.download_button(
+            label=f"下载 {chart_name}.html",
+            data=html_content,
+            file_name=f"{chart_name}.html",
+            mime="text/html",
+            key=f"dl_chart_top_{chart_name}",
+            type="primary",
+        )
+        with st.expander(f"查看: {chart_name}", expanded=True):
             components.html(html_content, height=500, scrolling=True)
-            st.download_button(
-                label=f"下载 {chart_name}.html",
-                data=html_content,
-                file_name=f"{chart_name}.html",
-                mime="text/html",
-                key=f"dl_chart_{chart_name}",
-            )
 
 
 def _render_process_log():
@@ -307,7 +319,7 @@ def _render_generated_files():
 def render_main_area():
     _render_data_overview()
     _handle_report_generation()
-    _render_charts()
-    _render_generated_files()
     _render_process_log()
     _render_chat()
+    _render_charts()
+    _render_generated_files()

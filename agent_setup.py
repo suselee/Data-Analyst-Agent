@@ -138,7 +138,6 @@ def create_agent(
             markdown=True,
             add_history_to_context=True,
             num_history_runs=5,
-            enable_agentic_memory=True,
         )
         vis_agent = Agent(
             name="数据可视化专员",
@@ -149,7 +148,6 @@ def create_agent(
             markdown=True,
             add_history_to_context=True,
             num_history_runs=5,
-            enable_agentic_memory=True,
         )
 
         team_instructions = instructions.copy()
@@ -165,7 +163,6 @@ def create_agent(
             add_history_to_context=True,
             num_history_runs=5,
             retries=3,
-            enable_agentic_memory=True,
         )
         return agent
     else:
@@ -177,7 +174,6 @@ def create_agent(
             add_history_to_context=True,
             num_history_runs=5,
             retries=3,
-            enable_agentic_memory=True,
         )
         workflow = Workflow(steps=[single_agent])
         return workflow
