@@ -8,6 +8,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 
 from agno.agent import Agent
+from agno.db.in_memory import InMemoryDb
 from agno.models.deepseek import DeepSeek
 from agno.models.openai.like import OpenAILike
 from agno.tools.pandas import PandasTools
@@ -99,7 +100,7 @@ def create_agent(
         "",
         "可视化规范：",
         "- 使用 plotly.express (px) 或 plotly.graph_objects (go) 创建图表",
-        "- 图表保存方式: `fig.write_html(os.path.join(CHART_DIR, '描述性名称.html'))`",
+        "- 图表保存方式: `fig.write_html(os.path.join(CHART_DIR, '描述性名称.html'))`，或 `fig.write_image(os.path.join(CHART_DIR, '描述性名称.png'))`",
         "- CHART_DIR 变量已预定义，直接使用即可，不要自己定义路径",
         "- 绝对不要调用 `fig.show()`",
         "- 确保图表有中文标题和轴标签",
@@ -136,6 +137,8 @@ def create_agent(
             tools=[pandas_tools],
             instructions=["请使用 PandasTools 对数据进行深入分析，提取有价值的结论。不要自己尝试画图。"],
             markdown=True,
+            db=InMemoryDb(),
+            session_id="app_session",
             add_history_to_context=True,
             num_history_runs=5,
         )
@@ -146,6 +149,8 @@ def create_agent(
             tools=[python_tools],
             instructions=["请使用 PythonTools 和 Plotly 生成美观的可视化图表，严格遵守图表保存和导出的规范。"],
             markdown=True,
+            db=InMemoryDb(),
+            session_id="app_session",
             add_history_to_context=True,
             num_history_runs=5,
         )
@@ -160,6 +165,8 @@ def create_agent(
             tools=[ReasoningTools(add_instructions=True)],
             instructions=team_instructions,
             markdown=True,
+            db=InMemoryDb(),
+            session_id="app_session",
             add_history_to_context=True,
             num_history_runs=5,
             retries=3,
@@ -171,6 +178,8 @@ def create_agent(
             tools=[pandas_tools, python_tools, ReasoningTools(add_instructions=True)],
             instructions=instructions,
             markdown=True,
+            db=InMemoryDb(),
+            session_id="app_session",
             add_history_to_context=True,
             num_history_runs=5,
             retries=3,
