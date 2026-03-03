@@ -5,6 +5,9 @@ from typing import List
 CHART_DIR = "temp_charts"
 CHART_DIR_ABS = os.path.join(os.path.dirname(os.path.abspath(__file__)), CHART_DIR)
 
+UPLOAD_DIR = "upload_files"
+UPLOAD_DIR_ABS = os.path.join(os.path.dirname(os.path.abspath(__file__)), UPLOAD_DIR)
+
 
 @dataclass
 class LLMProvider:

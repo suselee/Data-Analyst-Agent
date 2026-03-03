@@ -4,7 +4,7 @@ import pandas as pd
 import chainlit as cl
 from chainlit.input_widget import Select, TextInput
 
-from config import PROVIDERS, CHART_DIR_ABS
+from config import PROVIDERS, CHART_DIR_ABS, UPLOAD_DIR_ABS
 from agent_setup import create_agent
 
 
@@ -14,6 +14,9 @@ async def on_chat_start():
     if os.path.exists(CHART_DIR_ABS):
         shutil.rmtree(CHART_DIR_ABS, ignore_errors=True)
     os.makedirs(CHART_DIR_ABS, exist_ok=True)
+
+    # Ensure upload directory exists
+    os.makedirs(UPLOAD_DIR_ABS, exist_ok=True)
 
     # Setup ChatSettings to replace the Streamlit sidebar
     provider_options = list(PROVIDERS.keys())
@@ -115,17 +118,32 @@ async def on_message(message: cl.Message):
             ]:
                 await cl.Message(content=f"⏳ 正在读取文件 {element.name}...").send()
                 try:
+                    # Copy uploaded file to the fixed upload directory
+                    save_path = os.path.join(UPLOAD_DIR_ABS, element.name)
+                    shutil.copy2(element.path, save_path)
+
                     ext = os.path.splitext(element.name)[1].lower()
+
+                    uploaded_dfs = {}
                     if ext in [".xlsx", ".xls"]:
-                        sheets = pd.read_excel(element.path, sheet_name=None)
+                        sheets = pd.read_excel(save_path, sheet_name=None)
                         for sheet_name, df in sheets.items():
-                            dataframes[f"{os.path.splitext(element.name)[0]}_{sheet_name}"] = df
+                            df_key = f"{os.path.splitext(element.name)[0]}_{sheet_name}"
+                            dataframes[df_key] = df
+                            uploaded_dfs[df_key] = df
                     elif ext == ".csv":
-                        df = pd.read_csv(element.path)
-                        dataframes[os.path.splitext(element.name)[0]] = df
+                        df = pd.read_csv(save_path)
+                        df_key = os.path.splitext(element.name)[0]
+                        dataframes[df_key] = df
+                        uploaded_dfs[df_key] = df
 
                     cl.user_session.set("dataframes", dataframes)
-                    await cl.Message(content=f"✅ 成功加载文件 **{element.name}**！").send()
+                    await cl.Message(content=f"✅ 成功加载文件 **{element.name}** 并保存至上传目录！").send()
+
+                    # Display the first 5 rows of each loaded DataFrame
+                    for df_name, df in uploaded_dfs.items():
+                        overview_md = f"**{df_name}** 概览 (前5行):\n\n{df.head(5).to_markdown()}"
+                        await cl.Message(content=overview_md).send()
                 except Exception as e:
                     await cl.Message(content=f"❌ 读取文件 {element.name} 失败：{str(e)}").send()
 
