@@ -2,11 +2,22 @@ import os
 import shutil
 import pandas as pd
 import chainlit as cl
+import json
 from chainlit.input_widget import Select, TextInput
 
 from config import PROVIDERS, CHART_DIR_ABS, UPLOAD_DIR_ABS
 from agent_setup import create_agent
 
+
+# Get admin credentials from environment or use default
+ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin")
+
+@cl.password_auth_callback
+def auth(username, password):
+    if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+        return cl.User(identifier=username)
+    return None
 
 @cl.on_chat_start
 async def on_chat_start():
@@ -27,28 +38,48 @@ async def on_chat_start():
         for name, prov in PROVIDERS.items()
     }
 
+    # Load user preferences if available
+    user = cl.user_session.get("user")
+    user_settings = {}
+    if user and os.path.exists("user_settings.json"):
+        try:
+            with open("user_settings.json", "r", encoding="utf-8") as f:
+                all_settings = json.load(f)
+                user_settings = all_settings.get(user.identifier, {})
+        except Exception as e:
+            print(f"Error loading user settings: {e}")
+
+    initial_provider = user_settings.get("provider", "DeepSeek")
+    if initial_provider not in provider_options:
+        initial_provider = "DeepSeek"
+
+    initial_provider_index = provider_options.index(initial_provider)
+    initial_model_id = user_settings.get("model_id", "deepseek-chat")
+    initial_api_key = user_settings.get("api_key", env_keys.get(initial_provider, ""))
+    initial_base_url = user_settings.get("base_url", "")
+
     settings = await cl.ChatSettings(
         [
             Select(
                 id="provider",
                 label="选择供应商 (LLM Provider)",
                 values=provider_options,
-                initial_index=0,
+                initial_index=initial_provider_index,
             ),
             TextInput(
                 id="model_id",
                 label="模型 ID",
-                initial="deepseek-chat",
+                initial=initial_model_id,
             ),
             TextInput(
                 id="api_key",
                 label="API Key",
-                initial=env_keys["DeepSeek"],
+                initial=initial_api_key,
             ),
             TextInput(
                 id="base_url",
                 label="Base URL (仅用于 OpenAI Like 供应商)",
-                initial="",
+                initial=initial_base_url,
             ),
         ]
     ).send()
@@ -66,6 +97,22 @@ async def on_chat_start():
 @cl.on_settings_update
 async def on_settings_update(settings):
     cl.user_session.set("settings", settings)
+
+    # Save user preferences
+    user = cl.user_session.get("user")
+    if user:
+        try:
+            all_settings = {}
+            if os.path.exists("user_settings.json"):
+                with open("user_settings.json", "r", encoding="utf-8") as f:
+                    all_settings = json.load(f)
+
+            all_settings[user.identifier] = settings
+
+            with open("user_settings.json", "w", encoding="utf-8") as f:
+                json.dump(all_settings, f, ensure_ascii=False, indent=4)
+        except Exception as e:
+            print(f"Error saving user settings: {e}")
 
     provider_name = settings["provider"]
     provider = PROVIDERS[provider_name]
