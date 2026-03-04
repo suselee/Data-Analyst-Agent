@@ -250,4 +250,7 @@ async def on_message(message: cl.Message):
                 ).send()
 
     except Exception as e:
-        await cl.Message(content=f"❌ 出错了: {str(e)}").send()
+        if current_step:
+            current_step.status = "FAILED"
+            await current_step.update()
+        await cl.Message(content=f"❌ 分析时出错: {str(e)}").send()

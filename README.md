@@ -1,6 +1,6 @@
 # 数据分析 Agent (Data-Analyst-Agent)
 
-基于 Streamlit 和 Agno 构建的智能数据分析智能体（Agent）。它能够理解自然语言指令，通过调用大语言模型（LLM）配合强大的 Pandas 和 Python 工具，自动完成数据处理、探索性分析、可视化图表生成和专业分析报告的编写。
+基于 Chainlit 和 Agno 构建的智能数据分析智能体（Agent）。它能够理解自然语言指令，通过调用大语言模型（LLM）配合强大的 Pandas 和 Python 工具，自动完成数据处理、探索性分析、可视化图表生成和专业分析报告的编写。
 
 ## ✨ 主要特性
 
@@ -16,13 +16,11 @@
 ## 📦 项目结构
 
 ```text
-├── app.py                  # Streamlit 应用主入口
+├── app.py                  # Chainlit 应用主入口
 ├── agent_setup.py          # Agent 核心逻辑：提示词配置、工具挂载及实例化
 ├── config.py               # 配置文件：模型服务商参数与路径设定
 ├── requirements.txt        # Python 依赖清单
 ├── .env.example            # 环境变量配置参考
-├── ui/                     # UI 组件模块（侧边栏、主区域渲染逻辑）
-├── utils/                  # 辅助工具模块（如 session 状态管理）
 └── temp_charts/            # 运行时产生的临时图表及报告存放目录
 ```
 
@@ -67,18 +65,18 @@ MINIMAX_API_KEY=your_minimax_api_key
 
 ### 4. 启动应用
 
-在终端中运行以下命令启动 Streamlit 服务：
+在终端中运行以下命令启动 Chainlit 服务：
 
 ```bash
-streamlit run app.py
+chainlit run app.py -w
 ```
 
-服务启动后，通常会自动在浏览器中打开 `http://localhost:8501`。在侧边栏配置您的 API Key（如果未在 `.env` 中设置），上传数据文件后即可开始与数据分析 Agent 对话。
+服务启动后，通常会自动在浏览器中打开 `http://localhost:8000`。在应用界面设置配置您的 API Key（如果未在 `.env` 中设置），上传数据文件后即可开始与数据分析 Agent 对话。
 
 ## 💡 使用指南
 
-1. **上传数据**：支持多工作表的 Excel 或是单张 CSV 文件。
-2. **选择模型**：在左侧边栏根据需要选择要调用的 LLM 提供商及具体模型。
+1. **选择模型与配置**：在页面启动时的聊天设置面板或者左下角设置中，根据需要选择要调用的 LLM 提供商及具体模型。
+2. **上传数据**：按照对话流提示上传多工作表的 Excel 或是单张 CSV 文件。
 3. **自然语言对话**：在聊天框中直接向 Agent 提问，例如：
    - "帮我查看一下这份数据的基本描述性统计信息"
    - "绘制柱状图展示各个类别的销量总和，并生成一张交互式图表"
@@ -88,7 +86,7 @@ streamlit run app.py
 ## 📝 依赖说明
 
 主要依赖包括但不限于：
-- `streamlit` (>=1.38.0): Web UI 框架
+- `chainlit` (>=1.1.0): 响应式 Web UI 框架
 - `agno` (>=1.2.0): 强大的 Agent 开发框架
 - `pandas` (>=2.0.0), `numpy`: 数据处理基础库
 - `plotly` (>=5.18.0): 交互式可视化库
