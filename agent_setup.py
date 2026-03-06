@@ -119,9 +119,14 @@ def create_agent(
         "- 注意检查缺失值：用 `df['列名'].isna().sum()` 查看，必要时用 dropna() 或 fillna() 处理，并在回答中告知用户缺失情况",
         "",
         "## 多表操作规范",
-        "- 跨表分析时，先检查两个 DataFrame 的关联列（列名和数据类型是否一致）",
-        "- 合并使用 `pd.merge(df_a, df_b, on='关联列', how='left')` 并在回答中说明合并方式和结果行数",
-        "- 合并后检查是否产生了意外的重复行（`df.duplicated().sum()`）",
+        "- **操作意图判断**：首先判断用户是要【追加数据（按行拼接，类似Excel把表B贴在表A下面）】还是【匹配数据（按列关联，类似Excel的VLOOKUP）】",
+        "- **追加数据（concat）**：如果是按行拼接，使用 `pd.concat([df_a, df_b], ignore_index=True)`。注意检查列名是否对齐。",
+        "- **匹配数据（merge）**：如果是 VLOOKUP 类的操作，先检查两个 DataFrame 的关联列（列名和数据类型是否一致）",
+        "  - **极度重要：合并基准必须非常明确。**如果两个表的关联列名完全一致，可直接合并；",
+        "  - **如果列名不一致但你猜测它们可能是关联列，绝对不要盲目自作主张进行合并！** 你必须先向用户确认：“这两个表是否通过 X 和 Y 关联？如果是，请确认，我将进行合并。”",
+        "  - 必须等待用户明确给出肯定答复后，再执行合并操作。",
+        "  - 合并使用 `pd.merge(df_a, df_b, left_on='列A', right_on='列B', how='left')` 并在回答中说明合并方式和结果行数",
+        "  - 无论是 concat 还是 merge，操作后务必检查是否产生了意外的重复行（`df.duplicated().sum()`）",
         "",
         "## 可视化规范",
         "- 使用 plotly.express (px) 或 plotly.graph_objects (go) 创建图表",
@@ -173,8 +178,8 @@ def create_agent(
         db=InMemoryDb(),
         session_id="app_session",
         add_history_to_context=True,
-        num_history_runs=5,
-        retries=3,
+        num_history_runs=8,
+        retries=5,
     )
 
     return agent

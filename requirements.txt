@@ -1,4 +1,4 @@
-chainlit>=1.1.0
+chainlit>=2.5.0
 agno>=1.2.0
 openpyxl>=3.1.0
 plotly>=5.18.0
@@ -6,4 +6,3 @@ pandas>=2.0.0
 numpy>=1.24.0
 tabulate>=0.9.0
 openai>=1.0.0
-fastapi>=0.100.0
