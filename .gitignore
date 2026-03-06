@@ -1,5 +1,18 @@
 # Generated output directories
 temp_charts/
+upload_files/
+
+# Chainlit runtime
+.files/
+.chainlit/translations/
+chainlit.log
+
+# User settings
+user_settings.json
+
+# Claude Code
+.claude/
+CLAUDE.md
 
 # Python cache
 __pycache__/

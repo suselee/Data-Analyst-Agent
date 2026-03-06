@@ -1,0 +1,35 @@
+/* === Metric highlight cards (blockquote styling) === */
+.markdown-body blockquote {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(59, 130, 246, 0.05));
+  border-left: 4px solid #6366f1;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 8px 0;
+  font-size: 0.95em;
+}
+
+.markdown-body blockquote strong {
+  color: #818cf8;
+}
+
+/* === Side panel: larger preview area === */
+.side-view {
+  min-width: 45%;
+}
+
+/* === Message spacing polish === */
+.step-container {
+  margin-bottom: 4px;
+}
+
+/* === Tool step compact style === */
+.step-tool {
+  font-size: 0.55em;
+  opacity: 0.7;
+}
+
+/* === Action button styling === */
+.action-button {
+  border-radius: 8px !important;
+  font-size: 0.9em !important;
+}
